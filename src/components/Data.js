@@ -40,6 +40,9 @@ export function Data () {
         fetchList1();
     }, [])
 
+    // const source = new EventSource("wss://market.southxchange.com/api/v2/connect")
+
+    
     return (
     <>
     <div className="">
