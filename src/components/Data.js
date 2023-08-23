@@ -1,6 +1,6 @@
 import React, { useEffect, useState} from "react";
 
-export function Data () {
+export function Data ({ reducerValue }) {
 
     const [southList, setSouthList] = useState([]);
     const [vtc, setVtc] = useState([]);
@@ -63,6 +63,7 @@ export function Data () {
     }, [])
 
     useEffect(() => {
+        if (symbol) {
         const fetchList3 = async () => {
                 const response = await fetch(`${SOUTHXCHANG_URL}/api/book/${symbol[0]}/${symbol[1]}`, {
                     method: "GET"
@@ -75,6 +76,18 @@ export function Data () {
             
         }
         fetchList3();
+    }
+    }, [symbol, reducerValue])
+
+    useEffect(() => {
+        const data = window.localStorage.getItem('_symbol')
+        if (data != null) {
+            setSymbol(JSON.parse(data))
+        }
+    }, [])
+
+    useEffect(() => {
+        window.localStorage.setItem('_symbol', JSON.stringify(symbol))
     }, [symbol])
 
     // const source = new EventSource("wss://market.southxchange.com/api/v2/connect")
