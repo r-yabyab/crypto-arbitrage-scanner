@@ -8,8 +8,13 @@ export function Data ({ reducerValue }) {
 
     const [symbol, setSymbol] = useState("");
     const [symbolBook, setSymbolBook] = useState([]);
+
+    const [initialAmount, setInitialAmount] = useState(0);
     
     let SOUTHXCHANG_URL = "https://market.southxchange.com";
+    let COINBASE_URL = "https://api.coinbase.com/v2";
+    let COINBASE_EXCHANGE_URL = "https://api.exchange.coinbase.com/products";
+    // https://api.exchange.coinbase.com/products/btc-usd/book?level=2
 
     useEffect(() => {
         const fetchList = async () => {
@@ -21,7 +26,7 @@ export function Data ({ reducerValue }) {
 
             if (response.ok) {
                 setSouthList(json)
-                console.log(json)
+                // console.log(json)
             } else {
                 console.log("ERROR");
             }
@@ -40,7 +45,7 @@ export function Data ({ reducerValue }) {
                 const json = await response.json();
                 if (response.ok) {
                     setVtc(json)
-                    console.log(json)
+                    // console.log(json)
                 }
             
         }
@@ -55,7 +60,7 @@ export function Data ({ reducerValue }) {
             const json = await response.json();
             if (response.ok) {
                 setVtcBook(json)
-                console.log(json)
+                // console.log(json)
             }
         
     }
@@ -71,13 +76,60 @@ export function Data ({ reducerValue }) {
                 const json = await response.json();
                 if (response.ok) {
                     setSymbolBook(json)
-                    console.log(json)
+                    // console.log(json)
                 }
             
         }
         fetchList3();
     }
     }, [symbol, reducerValue])
+
+    const [coinbasePrice, setCoinbasePrice] = useState([])
+
+    const [dollarPair, setDollarPair] = useState('BTC')
+    const DOLLAR_PAIRS = ['BTC', 'ETH', 'XLM', 'DASH']
+
+    // Show starting point for Arbitrage
+    useEffect(() => {
+        if (dollarPair) {
+        const fetchData = async () => {
+        const response = await fetch(`${COINBASE_URL}/prices/${dollarPair}-USD/buy`, {
+            method: "GET",
+            headers: {
+                Accept: "application/json",
+                // quote: "true"
+            }
+        })    
+        const json = await response.json()
+        if (response.ok) {
+            setCoinbasePrice({
+                base: json.data.base,
+                currency: json.data.currency,
+                amount: json.data.amount,
+            })
+            // console.log(JSON.stringify(json) + "sekfisejfiosejfoisejfiosj{FSEFLSEPFJKSEOFJ")
+        }
+        }
+        fetchData()
+    }
+    }, [dollarPair])
+
+
+
+    // Starting point buyable with USD
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await fetch (`${COINBASE_URL}/exchange-rates?currency=USD`,{
+                method: "GET"
+            })
+            const json = await response.json()
+            if (response.ok) {
+                setDollarPair(json)
+                console.log(json)
+            }
+        }
+        fetchData()
+    }, [])
 
     useEffect(() => {
         const data = window.localStorage.getItem('_symbol')
@@ -97,11 +149,68 @@ export function Data ({ reducerValue }) {
         // console.log(symbol)
         // console.log(symbol[0])
     }
+
+    const dollarHandler = (ticker) => {
+        setDollarPair(ticker)
+        console.log(ticker)
+    }
+
+    const amountHandler = (event) => {
+        if (event.key === 'Enter' && initialAmount > 0) {
+            console.log(initialAmount);
+            
+        }
+    }
+
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter' && initialAmount > 0) {
+            console.log(initialAmount);
+            setInitialAmount(0)
+        }
+    }
+
+
     
     return (
     <>
             <div className="">
                 data div
+
+                <div className="bg-yellow-200 p-2">
+                    CB Price
+                    <div className="flex flex-col justify-center align-middle items-center">
+                        <p>{coinbasePrice.base && coinbasePrice.base}</p>
+                        <p>{coinbasePrice.amount && coinbasePrice.amount}</p>
+                    </div>
+                    <div>
+                        USD Pairs
+                        <div className="flex gap-4 [&>*]:border-2 [&>*]:rounded-md [&>*]:border-blue-600 [&>*]:p-2">
+                            {DOLLAR_PAIRS.map(x => {
+                                return (
+                                    <div onClick={() => dollarHandler(x)}>
+                                        {x}
+                                        </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-slate-200 p-4 flex gap-4">
+                    <div>
+                        <div>Amount</div>
+                        <input
+                            type="number"
+                            onChange={amountHandler}
+                            onKeyDown={handleKeyDown}
+                            placeholder="$" />
+                    </div>
+                    <div>
+                        <div>Fees (round trip)</div>
+                        <div>{initialAmount}</div>
+                    </div>
+                </div>
+
                 <div className="bg-green-400 p-4">
                     {vtc && (
                         <div>
